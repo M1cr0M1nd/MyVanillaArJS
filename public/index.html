@@ -19,7 +19,11 @@
     <script>
       document.getElementById('add').addEventListener('click', function () {
         console.log('adding text')
-        createText(document.getElementById('x').value, document.getElementById('y').value, document.getElementById('text').value)
+        if (!show) {
+          console.log('You gotta show me what you got')
+        } else {
+          createText(document.getElementById('x').value, document.getElementById('y').value, document.getElementById('text').value)
+        }
       })
 
       var texts = []
@@ -63,10 +67,10 @@
         onResize()
       })
       function onResize(){
-        arToolkitSource.onResize()
-        arToolkitSource.copySizeTo(renderer.domElement)
+        arToolkitSource.onResizeElement()
+        arToolkitSource.copyElementSizeTo(renderer.domElement)
         if( arToolkitContext.arController !== null ){
-          arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)
+          arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas)
         }
       }
 
@@ -189,6 +193,7 @@
         textMesh1.rotation.x = -1;
         arWorldRoot.add(textMesh1)
         texts.push({text: funcText, x: x, y: y})
+        console.log('Show Save ? ', thissave)
         if (thissave !== false) {
           save()
         }
@@ -249,14 +254,14 @@
 
       var raycaster = new THREE.Raycaster();
       var mouse = new THREE.Vector2()
-      window.addEventListener('resize', onWindowResize, false);
+      // window.addEventListener('resize', onWindowResize, false);
       document.addEventListener('mousedown', onMouseDown, false);
 
-      function onWindowResize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      }
+      // function onWindowResize() {
+      //   camera.aspect = window.innerWidth / window.innerHeight;
+      //   camera.updateProjectionMatrix();
+      //   renderer.setSize(window.innerWidth, window.innerHeight);
+      // }
 
       function manageRaycasterIntersections(scene, camera) {
         camera.updateMatrixWorld();
@@ -270,18 +275,17 @@
             })
             show = true
           } else {
-
+            // show = false
           }
         }
         else {
-          // console.log('no fuck')
         }
       }
 
       var show = false
 
       function onMouseDown(event){
-        event.preventDefault();
+        // event.preventDefault();
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         console.log("mouse position: (" + mouse.x + ", "+ mouse.y + ")");

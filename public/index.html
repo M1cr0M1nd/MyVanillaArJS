@@ -22,6 +22,8 @@
         createText(document.getElementById('x').value, document.getElementById('y').value, document.getElementById('text').value)
       })
 
+      var texts = []
+
       // init renderer
       var renderer	= new THREE.WebGLRenderer({
         // antialias	: true,
@@ -42,7 +44,9 @@
       var scene	= new THREE.Scene()
 
       // Create a camera
-      var camera = new THREE.Camera()
+      // var camera = new THREE.Camera()
+      var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 5000);
+
       scene.add(camera)
 
       var arToolkitSource = new THREEx.ArToolkitSource({
@@ -141,6 +145,7 @@
 
       // instantiate a loader
       var loader = new THREE.OBJLoader();
+      var globalObj
 
       // load a resource
       loader.load(
@@ -151,8 +156,10 @@
           object.scale.x = 0.01
           object.scale.y = 0.01
           object.scale.z = 0.01
+
           object.rotation.x = -1
           object.rotation.z = -1
+          // console.log(object)
           arWorldRoot.add( object );
         },
         // called when loading is in progresses
@@ -166,7 +173,7 @@
         }
       );
 
-      function createText(x, y, thistext) {
+      function createText(x, y, thistext, thissave) {
         var funcText = (thistext) ? thistext : text
         var textGeo = new THREE.TextGeometry(funcText, {
           font: font,
@@ -181,6 +188,10 @@
         textMesh1.position.z = y;
         textMesh1.rotation.x = -1;
         arWorldRoot.add(textMesh1)
+        texts.push({text: funcText, x: x, y: y})
+        if (thissave !== false) {
+          save()
+        }
       }
 
       onRenderFcts.push(function(){
@@ -201,6 +212,83 @@
           onRenderFct(deltaMsec/1000, nowMsec/1000)
         })
       })
+
+      function save () {
+        try {
+          var instance = axios.create()
+          instance.put('https://api.myjson.com/bins/177bs8', texts).then(function (data) {
+            console.log('saved')
+          })
+        } catch (err) {
+          console.log(err)
+        }
+      }
+
+      function reset () {
+        try {
+          var instance = axios.create()
+          instance.put('https://api.myjson.com/bins/177bs8', []).then(function (data) {
+            console.log('resetted')
+          })
+        } catch (err) {
+          console.log(err)
+        }
+      }
+
+      function load () {
+        try {
+          var instance = axios.create()
+          instance.get('https://api.myjson.com/bins/177bs8').then(function (data) {
+            console.log('loaded')
+            texts = data.data
+          })
+        } catch (err) {
+          console.log(err)
+        }
+      }
+
+      var raycaster = new THREE.Raycaster();
+      var mouse = new THREE.Vector2()
+      window.addEventListener('resize', onWindowResize, false);
+      document.addEventListener('mousedown', onMouseDown, false);
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      function manageRaycasterIntersections(scene, camera) {
+        camera.updateMatrixWorld();
+        raycaster.setFromCamera(mouse, camera);
+        var intersects = raycaster.intersectObjects(scene.children);
+
+        if (intersects.length > 0) {
+          if (!show) {
+            texts.forEach(function (val) {
+              createText(val.x, val.y, val.text, false)
+            })
+            show = true
+          } else {
+
+          }
+        }
+        else {
+          // console.log('no fuck')
+        }
+      }
+
+      var show = false
+
+      function onMouseDown(event){
+        event.preventDefault();
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        console.log("mouse position: (" + mouse.x + ", "+ mouse.y + ")");
+        manageRaycasterIntersections(arWorldRoot.children[0], camera)
+      }
+
+      load()
     </script>
   </body>
 </html>
